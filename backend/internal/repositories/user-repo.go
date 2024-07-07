@@ -13,10 +13,20 @@ type UserRepoImpl interface {
 	Check(userName string, password string) *models.User
 	GetAllUsers() ([]models.User, error)
 	GetUserByUserName(userName string) (*models.User, error)
+	GetUserByID(userID uint) (*models.User, error)
 }
 
 type userRepo struct {
 	*repo
+}
+
+// GetUserByID implements UserRepoImpl.
+func (r *userRepo) GetUserByID(userID uint) (*models.User, error) {
+	var user models.User
+	if err := r.db.First(&user, userID).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
 }
 
 // GetUserByUserName implements UserRepoImpl.

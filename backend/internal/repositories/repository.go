@@ -4,13 +4,19 @@ import (
 	"backend/internal/config"
 	"backend/internal/database"
 	"backend/internal/models"
+	"backend/internal/utils"
+
 	"gorm.io/gorm"
 )
 
 func (r *repo) check(userName string, password string) *models.User {
 	var user models.User
 
-	if err := r.db.Where("UserName = ? and Password = ?", userName, password).First(&user).Error; err != nil {
+	if err := r.db.Where("UserName = ?", userName).First(&user).Error; err != nil {
+		return nil
+	}
+
+	if !utils.ComparePasswordHash(password, user.Password) {
 		return nil
 	}
 

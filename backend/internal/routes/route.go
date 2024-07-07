@@ -12,6 +12,10 @@ type Routing interface {
 	TaskRoute(handler handlers.HandlerImpl)
 	LoginRoute(handler handlers.Login)
 	SubTaskRoute(handler handlers.HandlerImpl)
+	SignUp(handler handlers.HandlerImpl)
+	Profile(handler handlers.HandlerImpl)
+	UserWorkSpace(handler handlers.HandlerImpl)
+	CommentRoute(handler handlers.CommentHandler)
 }
 
 type route struct {

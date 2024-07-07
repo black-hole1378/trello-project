@@ -36,6 +36,28 @@ func (w workSpaceHandler) Create(c echo.Context) error {
 		return handleDBError(err, c)
 	}
 
+	repository := repositories.NewUserWorkSpace()
+
+	user := repository.Check(c.Get("userName").(string), c.Get("password").(string))
+
+	if user == nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"message": "Specified User not found!",
+		})
+	}
+
+	userWorkSpace := models.UserWorkSpace{
+		WorkSpaceID: workSpace.ID,
+		UserID:      user.ID,
+		Role:        "Admin",
+	}
+
+	_, err = repository.CreateUserWorkSpace(userWorkSpace)
+
+	if err != nil {
+		return handleDBError(err, c)
+	}
+
 	return c.JSON(http.StatusCreated, echo.Map{
 		"workSpace": workSpace,
 	})
@@ -100,7 +122,14 @@ func (w workSpaceHandler) Update(c echo.Context) error {
 }
 
 func (w workSpaceHandler) GetAll(c echo.Context) error {
-	workSpaces, err := w.repository.GetAllWorkSpaces()
+	user := w.repository.Check(c.Get("userName").(string), c.Get("password").(string))
+
+	if user == nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"message": "Specified User not found!",
+		})
+	}
+	workSpaces, err := w.repository.GetAllWorkSpaces(user.ID)
 
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, echo.Map{
@@ -138,6 +167,6 @@ func (w workSpaceHandler) Get(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, echo.Map{
-		"workSpace": workSpace,
+		"workSpace12": workSpace,
 	})
 }

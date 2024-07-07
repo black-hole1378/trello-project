@@ -3,8 +3,10 @@ package handlers
 import (
 	"backend/internal/models"
 	"backend/internal/repositories"
+	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/labstack/echo/v4"
 )
@@ -58,12 +60,12 @@ func (t *taskHandler) GetAll(c echo.Context) error {
 	}
 
 	tasks, err := t.repository.GetTasks(uint(workSpaceId))
-
+	fmt.Println(tasks)
 	if err != nil {
 		return handleDBError(err, c)
 	}
 
-	return c.JSON(http.StatusFound, echo.Map{
+	return c.JSON(http.StatusOK, echo.Map{
 		"tasks": tasks,
 	})
 
@@ -102,41 +104,79 @@ func (t *taskHandler) Get(c echo.Context) error {
 }
 
 func (t *taskHandler) Create(c echo.Context) error {
-
 	id := c.Param("workspaceId")
 
 	workSpaceId, err := strconv.ParseUint(id, 10, 32)
-
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, echo.Map{
 			"message": "Invalid Workspace ID!",
 		})
 	}
 
-	var task models.Task
+	var request struct {
+		Title         string `json:"title"`
+		Description   string `json:"description"`
+		EstimatedTime string `json:"estimatedTime"` // Assuming frontend sends this as a string
+		DueDate       string `json:"dueDate"`
+		ImageUrl      string `json:"imageUrl"`
+		Priority      string `json:"priority"`
+		Status        string `json:"status"`
+		Assigned      string `json:"userName"`
+	}
 
-	if err := c.Bind(&task); err != nil {
+	if err := c.Bind(&request); err != nil {
 		return c.JSON(http.StatusBadRequest, echo.Map{
-			"message": err.Error(),
+			"message": "Invalid request body!",
 		})
 	}
 
-	task.WorkSpaceID = uint(workSpaceId)
+	// Parsing due date
+	dueDate, err := time.Parse("2006-01-02", request.DueDate)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"message": "Invalid Due Date format! Use YYYY-MM-DD.",
+		})
+	}
 
-	user := t.repository.Check(c.Get("userName").(string), c.Get("password").(string))
+	// Parsing estimated time (assuming it is in hours and converting to Duration)
+	estimatedTime, err := time.ParseDuration(request.EstimatedTime + "h")
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"message": "Invalid Estimated Time format!",
+		})
+	}
 
-	task.AssignedID = user.ID
-
-	newTask, err := t.repository.CreateTask(task)
-
+	userRepository := repositories.NewUserRepository()
+	user, err := userRepository.GetUserByUserName(request.Assigned)
 	if err != nil {
 		return handleDBError(err, c)
 	}
 
-	return c.JSON(http.StatusCreated, echo.Map{
+	// Assigning the request data to the Task model
+	task := models.Task{
+		Title:         request.Title,
+		Description:   request.Description,
+		EstimatedTime: estimatedTime,
+		DueDate:       dueDate,
+		ImageUrl:      request.ImageUrl,
+		Priority:      request.Priority,
+		Status:        request.Status,
+		AssignedID:    uint(user.ID),
+		WorkSpaceID:   uint(workSpaceId),
+	}
+
+	// Create the task in the database
+	newTask, err := t.repository.CreateTask(task)
+	if err != nil {
+		fmt.Println("Error creating task:", err)
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"message": "Error creating task!",
+		})
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
 		"task": newTask,
 	})
-
 }
 
 func (t *taskHandler) Delete(c echo.Context) error {

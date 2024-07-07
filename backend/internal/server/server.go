@@ -18,7 +18,12 @@ func Start() {
 	// echo instance
 	e := echo.New()
 
-	// Middleware
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"*"},
+		AllowMethods: []string{"GET", "POST", "PUT", "DELETE"},
+		AllowHeaders: []string{"Origin", "Content-Type", "Accept", "Authorization"},
+	}))
+	// Middlewares
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
@@ -35,7 +40,10 @@ func Start() {
 	routing.LoginRoute(handlers.NewLoginHandler())
 	routing.SubTaskRoute(handlers.NewSubTaskHandler())
 	routes.InitRefresh(e)
-
+	routing.SignUp(handlers.NewUserHandler())
+	routing.Profile(handlers.NewUserHandler())
+	routing.UserWorkSpace(handlers.NewUserWorkSpaceHandler())
+	routing.CommentRoute(*handlers.NewCommentHandler())
 	// starting server.
 	e.Logger.Fatal(e.Start(address))
 }

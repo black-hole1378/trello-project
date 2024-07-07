@@ -4,10 +4,11 @@ import (
 	"backend/internal/config"
 	"backend/internal/repositories"
 	"fmt"
-	"github.com/golang-jwt/jwt"
-	"github.com/labstack/echo/v4"
 	"net/http"
 	"strings"
+
+	"github.com/golang-jwt/jwt"
+	"github.com/labstack/echo/v4"
 )
 
 func JWTMiddleware() echo.MiddlewareFunc {
@@ -72,11 +73,8 @@ func JWTMiddleware() echo.MiddlewareFunc {
 					"message": "Invalid Token Please try Again5!",
 				})
 			}
-
-			fmt.Println(userName)
-
+			fmt.Println(password)
 			repo := repositories.NewUserRepository()
-
 			if repo.Check(userName, password) == nil {
 				return c.JSON(http.StatusUnauthorized, echo.Map{
 					"message": "Invalid Token Please try Again6!",

@@ -1,53 +1,49 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Box, Button, TextField, Typography, Link } from '@mui/material';
-import useFetch from '../../useFetch/useFetch';
+import axios from 'axios';
+import { useRouter } from 'next/navigation';
 
 const SignUpForm = () => {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [retypePassword, setRetypePassword] = useState('');
-    const [submit, setSubmit] = useState(false);
     const [error, setError] = useState(null);
-    const [success, setSuccess] = useState(null);
+    const router = useRouter()
 
-    const { data, error: fetchError, isLoading } = useFetch(
-        submit ? '/api/signup' : null,
-        submit ? {
-            method: 'POST',
-            data: { username, email, password },
-        } : null
-    );
-
-    useEffect(() => {
-        if (fetchError) {
-            setError(fetchError.response ? fetchError.response.data.message : fetchError.message);
-        }
-        if (data) {
-            setSuccess('Account created successfully!');
-            resetForm();
-        }
-        setSubmit(false);
-    }, [data, fetchError]);
-
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
+
+        const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
+
         if (password !== retypePassword) {
             setError('Passwords do not match.');
             return;
         }
-        setSubmit(true);
-        setError(null);
-        setSuccess(null);
-    };
 
-    const resetForm = () => {
-        setUsername('');
-        setEmail('');
-        setPassword('');
-        setRetypePassword('');
+        if (!passwordRegex.test(password)) {
+            setError('Password must be at least 8 characters long and contain at least one number, one uppercase letter, one lowercase letter, and one special character.');
+            return;
+        }
+
+        try {
+            const response = await axios.post('http://localhost:8000/auth/signup', {
+                username,
+                email,
+                password,
+            });
+            const { accessToken, refreshToken, message, user } = response.data;
+            // Store tokens in localStorage or sessionStorage for further usage
+            localStorage.setItem('accessToken', accessToken);
+            localStorage.setItem('refreshToken', refreshToken);
+            localStorage.setItem('userID', user.ID);
+            router.push("/");
+            console.log(response.data);
+        } catch (error) {
+            setError(error.response ? error.response.data.message : error.message);
+        }
     };
 
     return (
@@ -110,12 +106,10 @@ const SignUpForm = () => {
                 fullWidth
                 variant="contained"
                 sx={{ mt: 3, mb: 2 }}
-                disabled={isLoading}
             >
-                {isLoading ? 'Loading...' : 'Create Account'}
+                Create Account
             </Button>
             {error && <Typography variant="body2" color="error">{error}</Typography>}
-            {success && <Typography variant="body2">{success}</Typography>}
             <Link href="/login" variant="body2" style={{ textDecoration: "none", outline: "none" }}>
                 <Typography color={"text.info"} textAlign={"center"}>
                     Already have an account? Log in

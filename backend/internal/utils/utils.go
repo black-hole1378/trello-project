@@ -3,11 +3,12 @@ package utils
 import (
 	"backend/internal/config"
 	"errors"
+	"time"
+
 	"github.com/dlclark/regexp2"
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/gommon/log"
 	"golang.org/x/crypto/bcrypt"
-	"time"
 )
 
 func IsValidEmail(email string) error {
@@ -48,7 +49,7 @@ func GenerateJWT(userName string, password string) (string, string, error) {
 	claims := jwt.MapClaims{
 		"userName": userName,
 		"password": password,
-		"exp":      time.Now().Add(time.Minute * 30).Unix(),
+		"exp":      time.Now().Add(time.Minute * 120).Unix(),
 	}
 
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

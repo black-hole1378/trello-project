@@ -4,10 +4,11 @@ import (
 	"backend/internal/config"
 	"backend/internal/models"
 	"fmt"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 	"log"
 	"sync"
+
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 var lock = &sync.Mutex{}
@@ -38,7 +39,7 @@ func connectDatabase() *gorm.DB {
 	if err = DB.Exec(stateQuery("completed_state", []string{"YES", "NO"})).Error; err != nil {
 		log.Fatalf("failed to create enum type: %v", err)
 	}
-	err = DB.AutoMigrate(&models.Task{}, &models.User{}, &models.SubTask{}, &models.UserWorkSpace{}, &models.WorkSpace{})
+	err = DB.AutoMigrate(&models.Task{}, &models.User{}, &models.SubTask{}, &models.UserWorkSpace{}, &models.WorkSpace{}, &models.Comment{})
 	if err != nil {
 		log.Fatal(err.Error())
 	}

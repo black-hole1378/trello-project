@@ -9,12 +9,12 @@ type Task struct {
 	Title         string    `gorm:"type:varchar;not null"`
 	Description   string    `gorm:"type:varchar"`
 	ImageUrl      string    `gorm:"type:varchar"`
-	WorkSpaceID   uint      `gorm:"foreignKey:ID;not null;"`
-	workspace     WorkSpace `gorm:"foreignKey:WorkSpaceID;constraint:OnDelete:CASCADE;"`
+	WorkSpaceID   uint      `gorm:"not null"`
+	Workspace     WorkSpace `gorm:"foreignKey:WorkSpaceID;constraint:OnDelete:CASCADE;"`
 	Priority      string    `gorm:"type:varchar"`
 	AssignedID    uint      `gorm:"not null"`
-	assignedTo    User      `gorm:"foreignKey:AssignedID;constraint:OnDelete:CASCADE;"`
-	subTask       []SubTask `gorm:"foreignKey:TaskID;constraint:OnDelete:CASCADE;"`
+	AssignedTo    User      `gorm:"foreignKey:AssignedID;constraint:OnDelete:CASCADE;"`
+	SubTask       []SubTask `gorm:"foreignKey:TaskID;constraint:OnDelete:CASCADE;"`
 	Status        string    `gorm:"type:task_status;default:'In Progress'"`
 	EstimatedTime time.Duration
 	ActualTime    time.Duration

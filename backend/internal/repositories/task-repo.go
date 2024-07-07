@@ -83,7 +83,7 @@ func (r *taskRepo) GetTask(taskID uint, workSpaceID uint) (*models.Task, error) 
 func (r *taskRepo) GetTasks(workSpaceID uint) ([]models.Task, error) {
 	var tasks []models.Task
 
-	if err := r.db.Where("WorkSpaceID = ? ", workSpaceID).Find(&tasks).Error; err != nil {
+	if err := r.db.Where("work_space_id = ? ", workSpaceID).Find(&tasks).Error; err != nil {
 		return nil, err
 	}
 

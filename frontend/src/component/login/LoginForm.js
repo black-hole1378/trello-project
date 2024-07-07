@@ -1,26 +1,39 @@
+// components/LoginForm.js
 "use client"
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Box, Button, TextField, Typography } from '@mui/material';
-import useFetch from '../../useFetch/useFetch';
+import axios from 'axios';
 
 const LoginForm = () => {
-    const [email, setEmail] = useState('');
+    const [userName, setUserName] = useState('');
     const [password, setPassword] = useState('');
-    const [submitUrl, setSubmitUrl] = useState(null);
-    const [requestOptions, setRequestOptions] = useState(undefined);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const router = useRouter(); // Get router object from Next.js
 
-    const { data, isLoading, error } = useFetch(submitUrl, requestOptions);
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
-        setSubmitUrl('/api/login');
-        setRequestOptions({
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            data: JSON.stringify({ email, password }),
-        });
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const response = await axios.post('http://localhost:8000/auth/login', {
+                userName,
+                password,
+            });
+            const { accessToken, refreshToken, userID } = response.data;
+            // Store tokens in localStorage or sessionStorage for further usage
+            localStorage.setItem('accessToken', accessToken);
+            localStorage.setItem('refreshToken', refreshToken);
+            localStorage.setItem('userID', userID);
+            router.push("/")
+        } catch (err) {
+            setError(err.response ? err.response.data.message : err.message);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -35,13 +48,12 @@ const LoginForm = () => {
                 margin="normal"
                 required
                 fullWidth
-                id="email"
-                label="Enter your email"
-                name="email"
-                autoComplete="email"
+                id="userName"
+                label="Enter your username"
+                name="userName"
                 autoFocus
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
             />
             <TextField
                 margin="normal"
@@ -60,12 +72,11 @@ const LoginForm = () => {
                 fullWidth
                 variant="contained"
                 sx={{ mt: 3, mb: 2 }}
+                disabled={isLoading}
             >
-                Continue
+                {isLoading ? 'Loading...' : 'Continue'}
             </Button>
-            {isLoading && <Typography variant="body2">Loading...</Typography>}
-            {error && <Typography variant="body2" color="error">{error.message}</Typography>}
-            {data && <Typography variant="body2">Login Successful!</Typography>}
+            {error && <Typography variant="body1" textAlign={"center"} color="error">{error}</Typography>}
         </Box>
     );
 };

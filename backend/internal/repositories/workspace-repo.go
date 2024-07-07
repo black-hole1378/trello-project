@@ -8,12 +8,18 @@ type WorkSpaceRepoImpl interface {
 	DeleteWorkSpace(workSpaceID uint) error
 	CreateWorkSpace(workSpace *models.WorkSpace) (models.WorkSpace, error)
 	UpdateWorkSpace(updatedWorkSpace *models.WorkSpace) error
-	GetAllWorkSpaces() ([]models.WorkSpace, error)
+	GetAllWorkSpaces(userID uint) ([]models.WorkSpace, error)
 	GetWorkSpace(workSpaceID uint) (models.WorkSpace, error)
+	Check(userName string, password string) *models.User
 }
 
 type workSpaceRepo struct {
 	*repo
+}
+
+// Check implements WorkSpaceRepoImpl.
+func (r *workSpaceRepo) Check(userName string, password string) *models.User {
+	return r.check(userName, password)
 }
 
 func NewWorkSpaceRepo() WorkSpaceRepoImpl {
@@ -54,9 +60,11 @@ func (r *workSpaceRepo) UpdateWorkSpace(updatedWorkSpace *models.WorkSpace) erro
 	return nil
 }
 
-func (r *workSpaceRepo) GetAllWorkSpaces() ([]models.WorkSpace, error) {
+func (r *workSpaceRepo) GetAllWorkSpaces(userID uint) ([]models.WorkSpace, error) {
 	var workSpaces []models.WorkSpace
-	if err := r.db.Find(&workSpaces).Error; err != nil {
+	if err := r.db.Joins("JOIN user_work_spaces uws on uws.work_space_id = work_spaces.id").
+		Where("uws.user_id = ?", userID).
+		Find(&workSpaces).Error; err != nil {
 		return nil, err
 	}
 	return workSpaces, nil

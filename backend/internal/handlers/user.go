@@ -139,13 +139,13 @@ func (t *userHandler) Create(c echo.Context) error {
 	newUser.Password = utils.HashedPassword(newUser.Password)
 
 	user, err := t.repository.CreateUser(&newUser)
-
+     
 	if err != nil {
 		return handleDBError(err, c)
 	}
-
+    
 	accessToken, refreshToken, _ := utils.GenerateJWT(user.Username, user.Password)
-
+	
 	return c.JSON(http.StatusCreated, echo.Map{
 		"user":         user,
 		"accessToken":  accessToken,
